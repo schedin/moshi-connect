@@ -29,7 +29,7 @@ def get_version_from_file(project_root):
     version_file = project_root / "src" / "_version.py"
 
     if not version_file.exists():
-        print(f"⚠ Warning: Version file not found: {version_file}")
+        print(f"[WARNING] Version file not found: {version_file}")
         return None
 
     try:
@@ -40,14 +40,14 @@ def get_version_from_file(project_root):
         match = re.search(r"__version__\s*=\s*version\s*=\s*['\"]([^'\"]+)['\"]", content)
         if match:
             version = match.group(1)
-            print(f"✓ Found version: {version}")
+            print(f"[OK] Found version: {version}")
             return version
         else:
-            print(f"⚠ Warning: Could not parse version from {version_file}")
+            print(f"[WARNING] Could not parse version from {version_file}")
             return None
 
     except Exception as e:
-        print(f"⚠ Warning: Error reading version file: {e}")
+        print(f"[WARNING] Error reading version file: {e}")
         return None
 
 
@@ -106,7 +106,7 @@ def run_inno_setup(project_root, iscc_path, version=None):
     iss_file = project_root / "installer.iss"
 
     if not iss_file.exists():
-        print(f"✗ Error: Installer script not found: {iss_file}")
+        print(f"[ERROR] Installer script not found: {iss_file}")
         return False
 
     print(f"Inno Setup Compiler: {iscc_path}")
@@ -129,14 +129,14 @@ def run_inno_setup(project_root, iscc_path, version=None):
         )
 
         if result.returncode == 0:
-            print("\n✓ Installer created successfully")
+            print("\n[OK] Installer created successfully")
             return True
         else:
-            print("\n✗ Installer creation failed")
+            print("\n[FAILED] Installer creation failed")
             return False
 
     except Exception as e:
-        print(f"\n✗ Error running Inno Setup: {e}")
+        print(f"\n[ERROR] Error running Inno Setup: {e}")
         return False
 
 
@@ -168,15 +168,15 @@ def verify_output(project_root, version=None):
             installer_files = list(installer_dir.glob("moshi-connect-setup-*.exe"))
             if installer_files:
                 installer_file = installer_files[0]
-                print(f"\n⚠ Found installer with different name: {installer_file.name}")
+                print(f"\n[WARNING] Found installer with different name: {installer_file.name}")
 
     if installer_file.exists():
         size_mb = installer_file.stat().st_size / (1024 * 1024)
-        print(f"\n✓ Installer created: {installer_file}")
+        print(f"\n[OK] Installer created: {installer_file}")
         print(f"  Size: {size_mb:.2f} MB")
         return True
     else:
-        print(f"\n✗ Installer not found: {installer_file}")
+        print(f"\n[FAILED] Installer not found: {installer_file}")
         return False
 
 
@@ -187,7 +187,7 @@ def main():
 
     # Check if running on Windows
     if sys.platform != "win32":
-        print("\n✗ Error: This script is only for Windows")
+        print("\n[ERROR] This script is only for Windows")
         print("  The installer can only be built on Windows using Inno Setup")
         return 1
 
@@ -199,7 +199,7 @@ def main():
     print("\nReading version from git tags...")
     version = get_version_from_file(project_root)
     if not version:
-        print("⚠ Warning: Using default version (0.0.0-dev)")
+        print("[WARNING] Using default version (0.0.0-dev)")
         print("  Run 'pip install -e .' to generate version from git tags")
 
     # Find Inno Setup
@@ -207,27 +207,27 @@ def main():
     iscc_path = find_inno_setup()
 
     if not iscc_path:
-        print("\n✗ Error: Inno Setup not found")
+        print("\n[ERROR] Inno Setup not found")
         print("\nPlease install Inno Setup from: https://jrsoftware.org/isdl.php")
         print("After installation, run this script again.")
         return 1
 
-    print(f"✓ Found Inno Setup: {iscc_path}")
+    print(f"[OK] Found Inno Setup: {iscc_path}")
 
     if not run_inno_setup(project_root, iscc_path, version):
-        print("\n✗ Failed to create installer")
+        print("\n[FAILED] Failed to create installer")
         return 1
 
     # Verify output
     if not verify_output(project_root, version):
-        print("\n✗ Installer verification failed")
+        print("\n[FAILED] Installer verification failed")
         return 1
-    
+
     # Success summary
     print("\n" + "="*70)
     print("BUILD COMPLETE")
     print("="*70)
-    print("\n✓ Installer created successfully")
+    print("\n[OK] Installer created successfully")
 
     # Show installer filename with version
     if version:

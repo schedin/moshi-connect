@@ -73,11 +73,11 @@ def run_pyinstaller_with_spec(spec_file, project_root, build_dir, dist_dir):
     try:
         PyInstaller.__main__.run(args)
 
-        print(f"\n✓ Successfully built bundle using spec file")
+        print(f"\n[OK] Successfully built bundle using spec file")
         return True
 
     except Exception as e:
-        print(f"\n✗ Failed to build using spec file")
+        print(f"\n[FAILED] Failed to build using spec file")
         print(f"Error: {e}")
         return False
     finally:
@@ -98,10 +98,10 @@ def create_logs_directory(dist_bundle_dir):
     logs_dir = dist_bundle_dir / "logs"
     try:
         logs_dir.mkdir(exist_ok=True)
-        print(f"✓ Created logs directory: {logs_dir}")
+        print(f"[OK] Created logs directory: {logs_dir}")
         return True
     except Exception as e:
-        print(f"✗ Failed to create logs directory: {e}")
+        print(f"[FAILED] Failed to create logs directory: {e}")
         return False
 
 
@@ -132,12 +132,12 @@ def copy_runtime_dependencies(project_root, dist_bundle_dir):
             if images_dst.exists():
                 shutil.rmtree(images_dst)
             shutil.copytree(images_src, images_dst)
-            print(f"✓ Copied images directory")
+            print(f"[OK] Copied images directory")
         except Exception as e:
-            print(f"✗ Failed to copy images: {e}")
+            print(f"[FAILED] Failed to copy images: {e}")
             success = False
     else:
-        print(f"⚠ Warning: Images directory not found: {images_src}")
+        print(f"[WARNING] Images directory not found: {images_src}")
 
     # Copy openconnect directory
     openconnect_src = project_root / "build" / "openconnect"
@@ -149,16 +149,16 @@ def copy_runtime_dependencies(project_root, dist_bundle_dir):
             if openconnect_dst.exists():
                 shutil.rmtree(openconnect_dst)
             shutil.copytree(openconnect_src, openconnect_dst)
-            print(f"✓ Copied openconnect directory")
+            print(f"[OK] Copied openconnect directory")
 
             # Count files
             file_count = sum(1 for _ in openconnect_dst.rglob('*') if _.is_file())
             print(f"  ({file_count} files)")
         except Exception as e:
-            print(f"✗ Failed to copy openconnect: {e}")
+            print(f"[FAILED] Failed to copy openconnect: {e}")
             success = False
     else:
-        print(f"⚠ Warning: OpenConnect directory not found: {openconnect_src}")
+        print(f"[WARNING] OpenConnect directory not found: {openconnect_src}")
         print(f"  Run download_openconnect.py or download_openconnect_gui.py first")
 
     print()
@@ -185,15 +185,15 @@ def main():
 
     # Verify files exist
     if not spec_file.exists():
-        print(f"✗ Error: Spec file not found: {spec_file}")
+        print(f"[ERROR] Spec file not found: {spec_file}")
         return 1
 
     if not main_entry.exists():
-        print(f"✗ Error: Entry point not found: {main_entry}")
+        print(f"[ERROR] Entry point not found: {main_entry}")
         return 1
 
     if not service_entry.exists():
-        print(f"✗ Error: Entry point not found: {service_entry}")
+        print(f"[ERROR] Entry point not found: {service_entry}")
         return 1
     
     ensure_directory(build_dir)
@@ -223,7 +223,7 @@ def main():
             deps_success = copy_runtime_dependencies(project_root, dist_bundle_dir)
             success = success and deps_success
         else:
-            print(f"✗ Error: Distribution bundle directory not found: {dist_bundle_dir}")
+            print(f"[ERROR] Distribution bundle directory not found: {dist_bundle_dir}")
             success = False
 
     # Summary
@@ -232,11 +232,11 @@ def main():
     print("="*70)
 
     if success:
-        print("✓ Bundle: SUCCESS")
+        print("[OK] Bundle: SUCCESS")
         print("  - GUI Application")
         print("  - Service Application")
     else:
-        print("✗ Bundle: FAILED")
+        print("[FAILED] Bundle: FAILED")
     
     print(f"\nOutput directory: {dist_dir}")
     print(f"Build files: {build_dir}")
@@ -245,7 +245,7 @@ def main():
         print("\nGenerated files:")
         for item in sorted(dist_dir.iterdir()):
             if item.is_dir():
-                print(f"  📁 {item.name}/")
+                print(f"  [DIR] {item.name}/")
                 # List executables in the directory
                 for exe in sorted(item.iterdir()):
                     if exe.is_file():
@@ -253,7 +253,7 @@ def main():
                         print(f"     - {exe.name} ({size_mb:.2f} MB)")
             else:
                 size_mb = item.stat().st_size / (1024 * 1024)
-                print(f"  📄 {item.name} ({size_mb:.2f} MB)")
+                print(f"  [FILE] {item.name} ({size_mb:.2f} MB)")
     
     print("\n" + "="*70)
     print("NEXT STEPS")
