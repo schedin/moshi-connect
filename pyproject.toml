@@ -44,9 +44,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/schedin/openconnect-sso-gui"
-Repository = "https://github.com/schedin/openconnect-sso-gui"
-Issues = "https://github.com/schedin/openconnect-sso-gui/issues"
+Homepage = "https://github.com/schedin/moshi-connect"
+Repository = "https://github.com/schedin/moshi-connect"
+Issues = "https://github.com/schedin/moshi-connect/issues"
 
 [project.scripts]
 moshi-connect = "main:main"

@@ -11,7 +11,7 @@
   #define MyAppVersion "0.0.0-dev"
 #endif
 #define MyAppPublisher "MoshiCon AB, Sweden"
-#define MyAppURL "https://github.com/schedin/openconnect-sso-gui"
+#define MyAppURL "https://github.com/schedin/moshi-connect"
 #define MyAppExeName "moshi-connect.exe"
 #define MyServiceExeName "moshi-connect-service.exe"
 #define MyServiceName "MoshiConnectSvc"
