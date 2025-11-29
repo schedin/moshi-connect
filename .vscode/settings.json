@@ -1,0 +1,13 @@
+{
+  // turn on pytest (and optionally turn off unittest)
+  "python.testing.pytestEnabled": true,
+
+  // tell VS Code where your tests live
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  // (optional) if your code is under src/, make sure VS Code’s Python analysis can import it:
+  "python.analysis.extraPaths": [
+    "src"
+  ]
+}

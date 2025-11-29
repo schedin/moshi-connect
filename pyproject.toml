@@ -1,0 +1,150 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm>=8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moshi-connect"
+dynamic = ["version"]
+description = "A user interface ontop of OpenConnect for connecting to a VPN"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "GPLv3"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+classifiers = [
+]
+keywords = []
+
+dependencies = [
+    "pystray>=0.19.4",
+    "pillow>=9.0.0",
+    "lz4>=4.0.0",
+    "PySide6>=6.10.1",
+    "PyYAML>=6.0.0",
+    "pywin32>=305; platform_system=='Windows'",  # For cross-privilege named pipes
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing framework
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    # Code quality tools
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.10.1",
+    # Build tools
+    "pyinstaller>=6.0.0",
+    "setuptools_scm>=8.0",
+    "types-PyYAML",
+    "types-pywin32",
+    "pillow", # For image processing
+]
+
+[project.urls]
+Homepage = "https://github.com/schedin/openconnect-sso-gui"
+Repository = "https://github.com/schedin/openconnect-sso-gui"
+Issues = "https://github.com/schedin/openconnect-sso-gui/issues"
+
+[project.scripts]
+moshi-connect = "main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+#[[tool.mypy.overrides]]
+#module = [
+#    "pystray.*",
+#    "lz4.*",
+#]
+#ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg-info",
+    ".venv",
+    ".mypy_cache",
+    ".pytest_cache",
+]
+
+[tool.setuptools_scm]
+version_file = "src/_version.py"

@@ -1,0 +1,6 @@
+Create Windows installer
+better way of highligting service disconnect in gui (like a red status banner)
+yaml import/export of conf
+limit service admin permissions
+Prefer Windows Named Pipes with an ACL/SDDL that allows only your GUI user SID and the service SID.
+Connected icon still present while VPN has terminated in the background (sometimes).
