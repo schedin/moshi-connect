@@ -28,13 +28,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[dev]
 
-      - name: Get version
-        id: get_version
-        run: |
-          $version = python -c "from setuptools_scm import get_version; print(get_version())"
-          echo "version=$version" >> $env:GITHUB_OUTPUT
-          echo "Building version: $version"
-
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -53,10 +46,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ steps.get_version.outputs.version }}
+          name: ${{ github.ref_name }}
           draft: false
-          prerelease: ${{ contains(github.ref, '-') }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           files: |
-            build/installer/moshi-connect-setup-${{ steps.get_version.outputs.version }}.exe
+            build/installer/moshi-connect-setup-*.exe
 
