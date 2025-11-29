@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for setuptools_scm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Get version
+        id: get_version
+        run: |
+          $version = python -c "from setuptools_scm import get_version; print(get_version())"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "Building version: $version"
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+
+      - name: Build OpenConnect
+        run: python scripts/build_openconnect.py --install-deps
+
+      - name: Build distribution
+        run: python scripts/build_dist.py
+
+      - name: Build installer
+        run: python scripts/build_win_installer.py
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+          generate_release_notes: true
+          files: |
+            build/installer/moshi-connect-setup-${{ steps.get_version.outputs.version }}.exe
+
