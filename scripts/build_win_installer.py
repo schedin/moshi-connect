@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 """
-Build Installer Script
-
-This script automates the complete build process:
-1. Builds the distribution using build_dist.py
-2. Creates the Windows installer using Inno Setup
-
-Usage:
-    python scripts/build_installer.py
+Builds a Windows installer
 """
 
 import sys
