@@ -42,8 +42,8 @@ cp /mingw64/share/qemu/edk2-arm-vars.fd ./edk2-arm-vars.fd
 ```bash
 qemu-system-aarch64 \
   -M virt \
-  -cpu max,pauth-impdef=on \
-  -smp 6 \
+  -cpu cortex-a76 \
+  -smp 2 \
   -m 8G \
   -drive if=pflash,format=raw,readonly=on,file=/mingw64/share/qemu/edk2-aarch64-code.fd \
   -drive if=pflash,format=raw,file=$(pwd)/edk2-arm-vars.fd \
@@ -71,7 +71,7 @@ When promted for network install drivers: Browse to e:\NetKVM\w11\ARM64\
 Be patient while the driver loads and the network appears, it might first show that now drivers were found.
 
 ## 7 Enable RDP Access
-Win + I -> System -> Remote Desktop -> Enable Remote Desktop
+Right click Start -> Settings -> System -> Remote Desktop -> Enable Remote Desktop
 
 
 ## 8. Start QEMU - Normal Boot (After Installation)
@@ -80,8 +80,8 @@ After Windows is installed, boot without the ISOs:
 ```bash
 qemu-system-aarch64 \
   -M virt \
-  -cpu max,pauth-impdef=on \
-  -smp 6 \
+  -cpu cortex-a76 \
+  -smp 2 \
   -m 8G \
   -drive if=pflash,format=raw,readonly=on,file=/mingw64/share/qemu/edk2-aarch64-code.fd \
   -drive if=pflash,format=raw,file=$(pwd)/edk2-arm-vars.fd \
