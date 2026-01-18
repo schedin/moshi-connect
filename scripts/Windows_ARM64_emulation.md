@@ -22,7 +22,7 @@ Go to https://schneegans.de/windows/unattend-generator/ and generate an autounat
 2. Check the checkbox *Bypass Windows 11 requirements check (TPM, Secure Boot, etc.)*
 
 Go to https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/?C=M;O=D
-and download the latest stable VirtIO ISO (virtio-win.iso).
+and download the latest stable VirtIO ISO. Rename it to virtio-win.iso.
 
 Place the ISOs in the chosen directory
 
@@ -66,6 +66,9 @@ qemu-system-aarch64 \
 ```
 
 Expect the installation to take about 3 hours.
+
+When promted for network install drivers: Browse to e:\NetKVM\w11\ARM64\
+Be patient while the driver loads and the network appears, it might first show that now drivers were found.
 
 ## 7 Enable RDP Access
 Win + I -> System -> Remote Desktop -> Enable Remote Desktop
