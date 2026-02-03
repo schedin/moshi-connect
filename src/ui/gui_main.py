@@ -15,6 +15,7 @@ from PySide6.QtGui import QIcon, QFont, QCloseEvent
 from config.vpn_profiles import VPNProfileManager, VPNProfile
 from config.app_settings import AppSettings
 from ui.profile_dialog import ProfileConfigDialog
+from ui.settings_import_export_dialog import ExportDialog, ImportDialog
 from cookie import cookies
 
 from ui.gui_logging import GuiLogHandler, LogSignalEmitter
@@ -141,6 +142,19 @@ class MainWindow(QMainWindow):
         self.delete_profile_btn = QPushButton("Delete Profile...")
         self.delete_profile_btn.setMaximumWidth(120)
         profile_buttons_layout.addWidget(self.delete_profile_btn)
+        
+        # Add separator spacing
+        profile_buttons_layout.addSpacing(10)
+        
+        # Import/Export buttons
+        self.export_btn = QPushButton("Export Settings...")
+        self.export_btn.setMaximumWidth(120)
+        profile_buttons_layout.addWidget(self.export_btn)
+        
+        self.import_btn = QPushButton("Import Settings...")
+        self.import_btn.setMaximumWidth(120)
+        profile_buttons_layout.addWidget(self.import_btn)
+        
         profile_buttons_layout.addStretch()  # Push buttons to top
 
         profile_main_layout.addLayout(profile_input_layout)
@@ -198,6 +212,8 @@ class MainWindow(QMainWindow):
         self.configure_btn.clicked.connect(self.on_configure_clicked)
         self.add_profile_btn.clicked.connect(self.on_add_profile_clicked)
         self.delete_profile_btn.clicked.connect(self.on_delete_profile_clicked)
+        self.export_btn.clicked.connect(self.on_export_clicked)
+        self.import_btn.clicked.connect(self.on_import_clicked)
 
     def setup_status_display(self) -> None:
         """Setup the VPN status display widget (VS Code style status bar)"""
@@ -443,6 +459,36 @@ class MainWindow(QMainWindow):
             logger.info(f"Deleted profile: {current_text}")
         else:
             logger.error(f"Failed to delete profile: {current_text}")
+
+    def on_export_clicked(self) -> None:
+        """Handle export settings button click"""
+        try:
+            dialog = ExportDialog(self.profile_manager, self.settings, self)
+            dialog.exec()
+            logger.info("Export dialog closed")
+        except Exception as e:
+            logger.error(f"Error opening export dialog: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to open export dialog: {e}")
+
+    def on_import_clicked(self) -> None:
+        """Handle import settings button click"""
+        try:
+            dialog = ImportDialog(self.profile_manager, self.settings, self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.imported_successfully:
+                # Reload the profile combo to show imported profiles
+                self.update_profile_combo()
+                logger.info("Settings imported and UI updated")
+                
+                # Show success message with instruction to restart if needed
+                QMessageBox.information(
+                    self, 
+                    "Import Complete", 
+                    "Settings imported successfully! The profile list has been updated."
+                )
+        except Exception as e:
+            logger.error(f"Error opening import dialog: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to open import dialog: {e}")
+
 
     def on_connect_clicked(self) -> None:
         """Handle connect button click"""
