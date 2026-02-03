@@ -45,7 +45,7 @@ class ExportDialog(QDialog):
         
         # Text area for YAML content
         self.yaml_text = QTextEdit()
-        self.yaml_text.setReadOnly(False)
+        self.yaml_text.setReadOnly(True)
         self.yaml_text.setFont(QFont("Courier New", 10))
         layout.addWidget(self.yaml_text)
         

@@ -184,7 +184,7 @@ settings: {}
 
     def test_import_invalid_yaml(self):
         """Test that invalid YAML raises appropriate error"""
-        invalid_yaml = "this is not: valid: yaml: content:"
+        invalid_yaml = "key: [unclosed bracket"
         
         with self.assertRaises(yaml.YAMLError):
             yaml.safe_load(invalid_yaml)
