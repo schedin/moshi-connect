@@ -18,20 +18,55 @@ from common.logging_config import setup_logging_for_service, setup_logging_for_g
 logger = logging.getLogger(__name__)
 
 
+def _is_windows() -> bool:
+    """Check if running on Windows"""
+    return sys.platform == "win32"
+
+
 def get_config_dir() -> Path:
-    """Get the roaming AppData directory for settings and profiles"""
-    roaming_base = Path(os.environ["APPDATA"])  # e.g. C:\Users\<you>\AppData\Roaming
-    app_roaming = roaming_base / constants.APP_DIR
-    app_roaming.mkdir(exist_ok=True)
-    return app_roaming
+    r"""Get the configuration directory for settings and profiles
+    
+    Returns:
+        Windows: %APPDATA%/moshi-connect (e.g. C:\Users\<you>\AppData\Roaming\moshi-connect)
+        Linux: $XDG_CONFIG_HOME/moshi-connect or ~/.config/moshi-connect
+    """
+    if _is_windows():
+        roaming_base = Path(os.environ["APPDATA"])  # e.g. C:\Users\<you>\AppData\Roaming
+        app_config = roaming_base / constants.APP_DIR
+    else:
+        # Linux/Unix: Use XDG Base Directory Specification
+        xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+        if xdg_config_home:
+            config_base = Path(xdg_config_home)
+        else:
+            config_base = Path.home() / ".config"
+        app_config = config_base / constants.APP_DIR
+    
+    app_config.mkdir(parents=True, exist_ok=True)
+    return app_config
 
 
 def get_log_dir() -> Path:
-    """Get the local AppData directory for logs and temporary data"""
-    local_base = Path(os.environ["LOCALAPPDATA"])  # e.g. C:\Users\<you>\AppData\Local
-    app_local = local_base / constants.APP_DIR
-    app_local.mkdir(exist_ok=True)
-    return app_local
+    r"""Get the directory for logs and temporary data
+    
+    Returns:
+        Windows: %LOCALAPPDATA%/moshi-connect (e.g. C:\Users\<you>\AppData\Local\moshi-connect)
+        Linux: $XDG_DATA_HOME/moshi-connect or ~/.local/share/moshi-connect
+    """
+    if _is_windows():
+        local_base = Path(os.environ["LOCALAPPDATA"])  # e.g. C:\Users\<you>\AppData\Local
+        app_data = local_base / constants.APP_DIR
+    else:
+        # Linux/Unix: Use XDG Base Directory Specification
+        xdg_data_home = os.environ.get("XDG_DATA_HOME")
+        if xdg_data_home:
+            data_base = Path(xdg_data_home)
+        else:
+            data_base = Path.home() / ".local" / "share"
+        app_data = data_base / constants.APP_DIR
+    
+    app_data.mkdir(parents=True, exist_ok=True)
+    return app_data
 
 
 def setup_logging(log_dir: Path, app_name: str) -> None:
@@ -62,7 +97,10 @@ def check_dependencies(check_gui_deps: bool = True) -> bool:
     """Check if required dependencies are available
 
     Args:
-        check_gui_deps: Whether to check GUI-specific dependencies (PySide6, pystray)
+        check_gui_deps: Whether to check GUI-specific dependencies (PySide6)
+        
+    Note:
+        pystray is optional - the application will work without system tray support
     """
     missing_deps = []
 
@@ -71,11 +109,6 @@ def check_dependencies(check_gui_deps: bool = True) -> bool:
             import PySide6
         except ImportError:
             missing_deps.append("PySide6")
-
-        try:
-            import pystray
-        except ImportError:
-            missing_deps.append("pystray")
 
     try:
         import lz4

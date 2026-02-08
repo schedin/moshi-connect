@@ -10,7 +10,11 @@ from typing import Optional, Dict
 from PySide6.QtCore import QThread, Signal, QObject, QTimer
 from PySide6.QtWidgets import QSystemTrayIcon
 
-from ui.system_tray import SystemTrayManager
+# Import SystemTrayManager - only used for type hints
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ui.system_tray import SystemTrayManager
+
 from config.vpn_profiles import VPNProfile
 from ipc.vpn_connect_interface import VpnConnectManager, VpnStatusCallback, VpnStatus, LogStream, VpnErrorCode
 from ipc.service_client import ServiceClient
@@ -34,7 +38,7 @@ class VpnSignalEmitter(QObject):
 class VpnCallbackAdapter(VpnStatusCallback):
     """Adapter that converts VPN manager callbacks to Qt signals"""
 
-    def __init__(self, signal_emitter: VpnSignalEmitter, system_tray_manager: SystemTrayManager):
+    def __init__(self, signal_emitter: VpnSignalEmitter, system_tray_manager: Optional['SystemTrayManager']):
         self.signal_emitter = signal_emitter
         self.system_tray_manager = system_tray_manager
         self.current_status = VpnStatus.DISCONNECTED
@@ -53,19 +57,20 @@ class VpnCallbackAdapter(VpnStatusCallback):
         # Convert to legacy Qt signals for backward compatibility
         if status == VpnStatus.CONNECTED and previous_status != VpnStatus.CONNECTED:
             self.signal_emitter.connection_status_changed.emit(True)
-            # Show connection success notification
-            profile_name = data.get("profile_name", "VPN") if data else "VPN"
-            self.system_tray_manager.show_message(
-                "VPN Connected",
-                f"Successfully connected to {profile_name}",
-                QSystemTrayIcon.MessageIcon.Information,
-                5000  # 5 seconds
-            )
+            # Show connection success notification (if tray available)
+            if self.system_tray_manager:
+                profile_name = data.get("profile_name", "VPN") if data else "VPN"
+                self.system_tray_manager.show_message(
+                    "VPN Connected",
+                    f"Successfully connected to {profile_name}",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    5000  # 5 seconds
+                )
         elif status == VpnStatus.DISCONNECTED and previous_status != VpnStatus.DISCONNECTED:
             self.signal_emitter.connection_status_changed.emit(False)
 
-            # Show tray notification for unexpected disconnections
-            if data and data.get("was_error") == "true":
+            # Show tray notification for unexpected disconnections (if tray available)
+            if self.system_tray_manager and data and data.get("was_error") == "true":
                 reason = data.get("reason", "Unknown error")
                 self.system_tray_manager.show_message(
                     "VPN Connection Lost",

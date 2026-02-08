@@ -20,9 +20,19 @@ from cookie import cookies
 from ui.gui_logging import GuiLogHandler, LogSignalEmitter
 from ui.log_display_widget import LogDisplayWidget
 from ui.vpn_workers import VpnConnectionManager, VpnSignalEmitter
-from ui.system_tray import SystemTrayManager
+from PySide6.QtWidgets import QSystemTrayIcon
 
 logger = logging.getLogger(__name__)
+
+# Try to import SystemTrayManager - it may fail on some systems/environments
+try:
+    from ui.system_tray import SystemTrayManager
+    SYSTEM_TRAY_AVAILABLE = True
+except (ImportError, Exception) as e:
+    SYSTEM_TRAY_AVAILABLE = False
+    SystemTrayManager = None
+    # Can't use logger yet as it may not be configured, use print for early failures
+    print(f"System tray support not available: {e}", file=sys.stderr)
 
 
 class MainWindow(QMainWindow):
@@ -53,7 +63,16 @@ class MainWindow(QMainWindow):
         self.is_service_connected: Optional[bool] = None  # Track service connection state (None = unknown initially)
 
         # Initialize components (now that GUI logging is active)
-        self.system_tray = SystemTrayManager(self)
+        # Try to create system tray if available
+        self.system_tray: Optional[SystemTrayManager] = None
+        if SYSTEM_TRAY_AVAILABLE and QSystemTrayIcon.isSystemTrayAvailable():
+            try:
+                self.system_tray = SystemTrayManager(self)
+                logger.info("System tray initialized successfully")
+            except Exception as e:
+                logger.warning(f"Failed to initialize system tray: {e}")
+        else:
+            logger.info("System tray not available on this system")
 
         self.setup_window_icon()
         self.setup_ui()
@@ -256,11 +275,12 @@ class MainWindow(QMainWindow):
         self.vpn_signal_emitter.cookie_detected.connect(self.on_cookie_detected)
         self.vpn_signal_emitter.service_connection_changed.connect(self.on_service_connection_changed)
 
-        # System tray signals
-        self.system_tray.show_window_requested.connect(self.show_window)
-        self.system_tray.connect_requested.connect(self.on_connect_clicked)
-        self.system_tray.disconnect_requested.connect(self.on_disconnect_clicked)
-        self.system_tray.quit_requested.connect(self.quit_application)
+        # System tray signals (if available)
+        if self.system_tray:
+            self.system_tray.show_window_requested.connect(self.show_window)
+            self.system_tray.connect_requested.connect(self.on_connect_clicked)
+            self.system_tray.disconnect_requested.connect(self.on_disconnect_clicked)
+            self.system_tray.quit_requested.connect(self.quit_application)
 
     def update_profile_combo(self) -> None:
         """Update the profile combo box with available profiles"""
@@ -706,7 +726,8 @@ class MainWindow(QMainWindow):
 
     def update_tray_menu_visibility(self) -> None:
         """Update tray menu item visibility based on connection status"""
-        self.system_tray.update_connection_status(self.is_connected)
+        if self.system_tray:
+            self.system_tray.update_connection_status(self.is_connected)
 
     def show_window(self) -> None:
         """Show and raise the main window"""
@@ -741,14 +762,15 @@ class MainWindow(QMainWindow):
 
         # Cleanup VPN manager and system tray
         self.vpn_manager.cleanup()
-        self.system_tray.cleanup()
+        if self.system_tray:
+            self.system_tray.cleanup()
 
         logger.info("Exiting application")
         QApplication.quit()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Handle window close event"""
-        if self.system_tray.is_visible():
+        if self.system_tray and self.system_tray.is_visible():
             # Minimize to tray instead of closing
             self.hide()
             event.ignore()
