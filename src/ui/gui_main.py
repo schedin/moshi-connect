@@ -73,6 +73,11 @@ class MainWindow(QMainWindow):
                 logger.warning(f"Failed to initialize system tray: {e}")
         else:
             logger.info("System tray not available on this system")
+        
+        # If no system tray is available, quit when window is closed
+        if not self.system_tray:
+            QApplication.instance().setQuitOnLastWindowClosed(True)
+            logger.debug("Set quit on last window closed (no system tray)")
 
         self.setup_window_icon()
         self.setup_ui()
@@ -760,11 +765,8 @@ class MainWindow(QMainWindow):
                     logger.info("User cancelled quit operation")
                     return
 
-        # Cleanup VPN manager and system tray
-        self.vpn_manager.cleanup()
-        if self.system_tray:
-            self.system_tray.cleanup()
-
+        # Cleanup and quit
+        self._cleanup_and_quit()
         logger.info("Exiting application")
         QApplication.quit()
 
@@ -775,7 +777,34 @@ class MainWindow(QMainWindow):
             self.hide()
             event.ignore()
         else:
-            event.accept()
+            # No tray available - actually quit the application
+            if self.is_connected:
+                # Ask user if they want to disconnect
+                reply = QMessageBox.question(
+                    self, "Quit Application",
+                    "VPN is currently connected. Disconnect and quit?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.Yes:
+                    logger.info("User confirmed - disconnecting VPN before quit")
+                    self.vpn_manager.disconnect_vpn()
+                    self._cleanup_and_quit()
+                    event.accept()
+                else:
+                    logger.info("User cancelled quit operation")
+                    event.ignore()
+            else:
+                # Not connected - just quit
+                self._cleanup_and_quit()
+                event.accept()
+
+    def _cleanup_and_quit(self) -> None:
+        """Cleanup resources before quitting"""
+        logger.info("Cleaning up resources")
+        self.vpn_manager.cleanup()
+        if self.system_tray:
+            self.system_tray.cleanup()
 
 
 
