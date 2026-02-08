@@ -2,15 +2,33 @@ import json
 import lz4.block
 import configparser
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
+def _get_firefox_base_dir() -> Path:
+    """Get the Firefox base directory for the current platform
+    
+    Returns:
+        Windows: ~/AppData/Roaming/Mozilla/Firefox
+        Linux: ~/.mozilla/firefox
+        macOS: ~/Library/Application Support/Firefox
+    """
+    if sys.platform == "win32":
+        return Path.home() / "AppData" / "Roaming" / "Mozilla" / "Firefox"
+    elif sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Firefox"
+    else:  # Linux and other Unix-like systems
+        return Path.home() / ".mozilla" / "firefox"
+
+
 def get_default_firefox_profile_dir() -> Optional[Path]:
     """Get the default Firefox profile path using profiles.ini"""
-    profiles_ini = Path.home() / "AppData/Roaming/Mozilla/Firefox/profiles.ini"
+    firefox_base = _get_firefox_base_dir()
+    profiles_ini = firefox_base / "profiles.ini"
 
     if not profiles_ini.exists():
         logger.warning(f"Firefox profiles.ini not found at: {profiles_ini}")
@@ -40,7 +58,8 @@ def get_default_firefox_profile_dir() -> Optional[Path]:
             logger.warning("No default profile found in profiles.ini")
             return None
 
-    return Path.home() / "AppData/Roaming/Mozilla/Firefox" / path
+    firefox_base = _get_firefox_base_dir()
+    return firefox_base / path
 
 def extract_cookies_from_recovery_file() -> Optional[list[dict[str, str]]]:
     """Extract cookies from Firefox recovery.jsonlz4 file"""
